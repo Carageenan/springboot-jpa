@@ -5,6 +5,7 @@ import com.jpa.demo.models.MasterUser;
 import com.jpa.demo.repos.MasterAccountRepository;
 import com.jpa.demo.repos.MasterUserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -19,6 +20,9 @@ public class MasterController {
 
     @Autowired
     private MasterAccountRepository masterAccountRepository;
+
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
 
     @GetMapping("user")
     public List<MasterUser> getUser() {
@@ -85,6 +89,22 @@ public class MasterController {
             put("balance", totalBalance);
             put("msg", "Success");
         }};
+    }
+
+    @GetMapping("user/balanceJDBC/{id}")
+    public Map<String, Object> getBalanceJDBC(@PathVariable Long id) {
+        try {
+            String sql = "select SUM(balance) from master_account where user_id = ?";
+            Integer totalBalance = jdbcTemplate.queryForObject(sql, new Object[]{id}, Integer.class);
+            return new HashMap<>(){{
+                put("balance", totalBalance);
+                put("msg", "Success");
+            }};
+        } catch(Exception e) {
+            return new HashMap<>(){{
+                put("msg", "Something went wrong: " + e.getMessage());
+            }};
+        }
     }
 
 
