@@ -39,6 +39,7 @@ public class MasterController {
 
     @PostMapping("account/create")
     public Map<String, Object> createAccount(@RequestBody MasterAccount masterAccount) {
+        System.out.println(masterAccount + "ini");
         if(!masterUserRepository.existsById(masterAccount.getUserId())) {
             return new HashMap<>(){{
                 put("message", "User not found");
@@ -96,9 +97,11 @@ public class MasterController {
 
     @GetMapping("user/balanceJDBC/{id}")
     public ResponseEntity<Map<String, Object>> getBalanceJDBC(@PathVariable String id) {
+        System.out.println(id + " ini");
+        byte[] convertedId = convertUuidToRaw(UUID.fromString(id));
         try {
-            String sql = "select SUM(balance) from master_account_ihsan where user_id = HEXTORAW(?)";
-            Integer totalBalance = jdbcTemplate.queryForObject(sql, new Object[]{id}, Integer.class);
+            String sql = "select SUM(balance) from master_account_ihsan where user_id = ?";
+            Integer totalBalance = jdbcTemplate.queryForObject(sql, new Object[]{convertedId}, Integer.class);
             if(totalBalance == null) throw new Exception();
             return ResponseEntity.status(HttpStatus.OK).body(new HashMap<>(){{
                 put("balance", totalBalance);
@@ -111,6 +114,21 @@ public class MasterController {
         }
     }
 
+    public byte[] convertUuidToRaw(UUID uuid) {
+        String uuidStr = uuid.toString().replace("-", "");
+        return hexStringToByteArray(uuidStr);
+    }
+
+    // Helper method to convert hex string to byte array
+    public byte[] hexStringToByteArray(String s) {
+        int len = s.length();
+        byte[] data = new byte[len / 2];
+        for (int i = 0; i < len; i += 2) {
+            data[i / 2] = (byte) ((Character.digit(s.charAt(i), 16) << 4)
+                    + Character.digit(s.charAt(i+1), 16));
+        }
+        return data;
+    }
 
 
 }
