@@ -39,7 +39,6 @@ public class MasterController {
 
     @PostMapping("account/create")
     public Map<String, Object> createAccount(@RequestBody MasterAccount masterAccount) {
-        System.out.println(masterAccount + "ini");
         if(!masterUserRepository.existsById(masterAccount.getUserId())) {
             return new HashMap<>(){{
                 put("message", "User not found");
@@ -61,9 +60,11 @@ public class MasterController {
     @GetMapping("user/check/{id}")
     public Map<String, Object> checkUser(@PathVariable UUID id) {
         if(masterUserRepository.existsById(id)) {
+            List<MasterAccount> masterAccounts = masterAccountRepository.findByUserId(id);
             return new HashMap<>(){{
                 put("msg", "account exists");
                 put("user", masterUserRepository.findById(id).get());
+                put("account", masterAccounts);
             }};
         } else {
             return new HashMap<>(){{
@@ -97,7 +98,6 @@ public class MasterController {
 
     @GetMapping("user/balanceJDBC/{id}")
     public ResponseEntity<Map<String, Object>> getBalanceJDBC(@PathVariable String id) {
-        System.out.println(id + " ini");
         byte[] convertedId = convertUuidToRaw(UUID.fromString(id));
         try {
             String sql = "select SUM(balance) from master_account_ihsan where user_id = ?";
@@ -125,7 +125,7 @@ public class MasterController {
         byte[] data = new byte[len / 2];
         for (int i = 0; i < len; i += 2) {
             data[i / 2] = (byte) ((Character.digit(s.charAt(i), 16) << 4)
-                    + Character.digit(s.charAt(i+1), 16));
+                                + Character.digit(s.charAt(i+1), 16));
         }
         return data;
     }

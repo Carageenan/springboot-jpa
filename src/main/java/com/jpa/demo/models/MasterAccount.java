@@ -1,5 +1,6 @@
 package com.jpa.demo.models;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Getter;
