@@ -1,16 +1,10 @@
 package com.jpa.demo.services;
 
-import com.jpa.demo.event.KafkaMessageReceivedEvent;
-import com.jpa.demo.models.MasterAccount;
-import org.apache.kafka.clients.consumer.ConsumerConfig;
-import org.apache.kafka.common.serialization.StringDeserializer;
-import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.context.annotation.Bean;
+import com.jpa.demo.models.CurrencyRateResp;
+import com.jpa.demo.models.MasterCurrencies;
+import com.jpa.demo.repos.MasterCurrenciesRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.annotation.KafkaListener;
-import org.springframework.kafka.core.ConsumerFactory;
-import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
-import org.springframework.kafka.support.serializer.ErrorHandlingDeserializer;
-import org.springframework.kafka.support.serializer.JsonDeserializer;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
@@ -18,14 +12,24 @@ import java.util.Map;
 
 @Service
 public class KafkaConsumer {
+    @Autowired
+    private MasterCurrenciesRepository masterCurrenciesRepository;
 
-    String currAPIKey = "20123d62a9f74fa6b7916e3ae8f31152";
+    @KafkaListener(topics = "belajarKafka", groupId = "my-group-id", containerFactory = "objectKafkaListenerContainerFactory")
+    public void listen(CurrencyRateResp resp) {
+        Map<String, String> rates = resp.getRates();
+        String rateType = rates.keySet().iterator().next();
+        String rate = rates.get(rateType);
+        String date = resp.getDate();
 
-    @KafkaListener(topics = "belajarKafka", groupId = "my-group-id")
-    public void listen(String account) {
-
-        System.out.println("masuk sini " + account);
-        System.out.println("Received Message: " + account);
+        MasterCurrencies masterCurrencies = new MasterCurrencies(
+                date,
+                resp.getBase(),
+                rate,
+                rateType
+        );
+        masterCurrenciesRepository.save(masterCurrencies);
+        System.out.println("Data berhasil disimpan: " + masterCurrencies);
     }
     @KafkaListener(topics = "kafka2", groupId = "my-group-2")
     public void listen2(String message) {
